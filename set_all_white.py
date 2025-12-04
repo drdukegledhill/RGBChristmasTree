@@ -13,8 +13,10 @@ Run with:
     python3 set_all_white.py
 
 Controls:
- - Press digits `0`..`9` to set brightness (mapped to 0.0..0.9)
- - Press `1` then `0` quickly to set `10` (mapped to 1.0)
+ - Press `0` to turn the tree off (brightness 0.0)
+ - Press digits `1`..`9` to set brightness spread evenly from 0.1 up to 1.0
+     (so `1` -> 0.1 and `9` -> 1.0). Press `1` then `0` quickly to set `10`
+     (also mapped to 1.0).
  - Press `q` to quit
 
 This uses the `curses` module for realtime key handling. On systems
@@ -90,7 +92,13 @@ def main():
                         except Exception:
                             tree.color = (0, 0, 0)
                     else:
-                        tree.brightness = val / 10.0
+                        # Map 1..9 -> 0.1..1.0 evenly. 10 -> 1.0
+                        if val == 10:
+                            brightness = 1.0
+                        else:
+                            # spread 1..9 inclusive across [0.1, 1.0]
+                            brightness = 0.1 + (val - 1) * (0.9 / 8)
+                        tree.brightness = brightness
                         tree.color = (1, 1, 1)
 
                     stdscr.addstr(1, 0, f"Current brightness: {tree.brightness:.2f}   ")
