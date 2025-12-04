@@ -3,8 +3,6 @@ from time import sleep
 
 tree = RGBXmasTree()
 
-colors = [(1, 0, 0), (0, 1, 0), (0, 0, 1)]
-
-for color in colors:
-    tree.color = color
+for pixel in tree:
+    pixel.color = (1, 0, 0)
     sleep(1)
