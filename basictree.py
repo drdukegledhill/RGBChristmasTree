@@ -1,5 +1,10 @@
 from tree import RGBXmasTree
+from time import sleep
 
 tree = RGBXmasTree()
 
-tree.color = (1, 0, 0)
+colors = [(1, 0, 0), (0, 1, 0), (0, 0, 1)]
+
+for color in colors:
+    tree.color = color
+    sleep(1)
