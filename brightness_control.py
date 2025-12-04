@@ -13,28 +13,9 @@ This script expects to be in the same folder as `tree.py` from
 ThePiHut/rgbxmastree.
 """
 
-import sys
-import time
-import select
-import tty
-import termios
 
+import curses
 from tree import RGBXmasTree
-
-
-def get_key(timeout=None):
-    """Read a single keypress from stdin. Returns the character or None on timeout."""
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    try:
-        tty.setraw(fd)
-        r, _, _ = select.select([sys.stdin], [], [], timeout)
-        if r:
-            ch = sys.stdin.read(1)
-            return ch
-        return None
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
 
 def main():
@@ -64,26 +45,56 @@ def main():
                 brightness = val / 10.0
                 if val == 0:
                     try:
-                        tree.off()
-                    except Exception:
-                        tree.color = (0, 0, 0)
-                else:
-                    tree.brightness = brightness
-                    tree.color = (1, 1, 1)
-                print(f"Set brightness to {val} -> {brightness:.2f}")
-            else:
-                print(f"Invalid input: {inp}")
-    except KeyboardInterrupt:
-        print("Interrupted — exiting.")
-    finally:
-        try:
-            tree.off()
-        except Exception:
-            try:
-                tree.color = (0, 0, 0)
-            except Exception:
-                pass
 
+                        def curses_main(stdscr):
+                            tree = RGBXmasTree()
+                            tree.color = (1, 1, 1)
+                            current = getattr(tree, "brightness", 0.5)
+                            stdscr.nodelay(True)
+                            stdscr.clear()
+                            stdscr.addstr(0, 0, "Brightness control — press 0-9 or 1 then 0 for 10 (0=off). Press 'q' to quit.")
+                            stdscr.addstr(1, 0, f"Current brightness: {current:.2f}")
+                            stdscr.refresh()
+                            last_key = None
+                            while True:
+                                try:
+                                    key = stdscr.getch()
+                                    if key == -1:
+                                        continue
+                                    if key in (ord('q'), ord('Q')):
+                                        stdscr.addstr(2, 0, "Quit requested — exiting.   ")
+                                        stdscr.refresh()
+                                        break
+                                    if key in range(ord('0'), ord('9')+1):
+                                        val = key - ord('0')
+                                        # If previous key was '1' and now '0', treat as '10'
+                                        if last_key == ord('1') and key == ord('0'):
+                                            val = 10
+                                        last_key = key
+                                        brightness = val / 10.0
+                                        if val == 0:
+                                            try:
+                                                tree.off()
+                                            except Exception:
+                                                tree.color = (0, 0, 0)
+                                        else:
+                                            tree.brightness = brightness
+                                            tree.color = (1, 1, 1)
+                                        stdscr.addstr(1, 0, f"Current brightness: {brightness:.2f}   ")
+                                        stdscr.addstr(2, 0, f"Set brightness to {val} -> {brightness:.2f}   ")
+                                        stdscr.refresh()
+                                    else:
+                                        last_key = key
+                                except KeyboardInterrupt:
+                                    stdscr.addstr(2, 0, "Interrupted — exiting.   ")
+                                    stdscr.refresh()
+                                    break
+                            try:
+                                tree.off()
+                            except Exception:
+                                try:
+                                    tree.color = (0, 0, 0)
+                                except Exception:
+                                    pass
 
-if __name__ == '__main__':
-    main()
+                        curses.wrapper(curses_main)
