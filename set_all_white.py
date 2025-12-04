@@ -37,26 +37,41 @@ def main():
         # Fallback: simple behavior identical to previous script
         tree = RGBXmasTree()
         tree.brightness = 0.5
-        tree.color = (1, 1, 1)
+        # Ensure all pixels are set to white explicitly
+        try:
+            tree.color = (1, 1, 1)
+            for pixel in tree:
+                pixel.color = (1, 1, 1)
+        except Exception:
+            pass
 
         try:
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
+            # Turn every pixel off on exit
+            try:
+                for pixel in tree:
+                    pixel.color = (0, 0, 0)
+            except Exception:
+                pass
             try:
                 tree.off()
             except Exception:
-                try:
-                    tree.color = (0, 0, 0)
-                except Exception:
-                    pass
+                pass
         return
 
     def curses_main(stdscr):
         tree = RGBXmasTree()
         # Default to 50%
         tree.brightness = 0.5
-        tree.color = (1, 1, 1)
+        # Ensure all pixels are set to white explicitly
+        try:
+            tree.color = (1, 1, 1)
+            for pixel in tree:
+                pixel.color = (1, 1, 1)
+        except Exception:
+            pass
 
         stdscr.nodelay(True)
         stdscr.clear()
@@ -73,8 +88,18 @@ def main():
 
                 # quit
                 if key in (ord('q'), ord('Q')):
-                    stdscr.addstr(3, 0, "Quit requested — exiting.    ")
+                    stdscr.addstr(3, 0, "Quit requested — turning lights off and exiting.    ")
                     stdscr.refresh()
+                    # Turn every pixel off immediately
+                    try:
+                        for pixel in tree:
+                            pixel.color = (0, 0, 0)
+                    except Exception:
+                        pass
+                    try:
+                        tree.off()
+                    except Exception:
+                        pass
                     break
 
                 # digit keys
@@ -87,10 +112,16 @@ def main():
 
                     # apply brightness
                     if val == 0:
+                        # Turn all pixels off explicitly
+                        try:
+                            for pixel in tree:
+                                pixel.color = (0, 0, 0)
+                        except Exception:
+                            pass
                         try:
                             tree.off()
                         except Exception:
-                            tree.color = (0, 0, 0)
+                            pass
                     else:
                         # Map 1..9 -> 0.1..1.0 evenly. 10 -> 1.0
                         if val == 10:
@@ -99,7 +130,13 @@ def main():
                             # spread 1..9 inclusive across [0.1, 1.0]
                             brightness = 0.1 + (val - 1) * (0.9 / 8)
                         tree.brightness = brightness
-                        tree.color = (1, 1, 1)
+                        # Ensure each pixel shows white at the desired brightness
+                        try:
+                            tree.color = (1, 1, 1)
+                            for pixel in tree:
+                                pixel.color = (1, 1, 1)
+                        except Exception:
+                            pass
 
                     stdscr.addstr(1, 0, f"Current brightness: {tree.brightness:.2f}   ")
                     stdscr.addstr(2, 0, f"Set brightness to {val} -> {tree.brightness:.2f}   ")
