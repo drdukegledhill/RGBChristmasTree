@@ -49,53 +49,30 @@ def main():
     current = getattr(tree, "brightness", 0.5)
     print(f"Current brightness: {current:.2f}")
 
+
     try:
         while True:
-            ch = get_key()
-            if ch is None:
-                continue
-
-            if ch == 'q':
+            inp = input("Enter brightness (0-10), or 'q' to quit: ").strip()
+            if inp.lower() == 'q':
                 print("Quit requested — exiting.")
                 break
-
-            if ch.isdigit():
-                # Handle potential two-character '10' (pressing '1' then '0')
-                if ch == '1':
-                    # wait a short moment to see if user types '0'
-                    nxt = get_key(timeout=0.25)
-                    if nxt == '0':
-                        val = 10
-                    else:
-                        val = 1
-                        # if nxt is another key, keep it in variable to process
-                        if nxt is not None:
-                            # process nxt in next loop iteration by printing it back
-                            # (can't push back into stdin easily)
-                            pass
-                else:
-                    val = int(ch)
-
-                # Map 0..10 -> 0.0..1.0
-                brightness = max(0.0, min(1.0, val / 10.0))
-
+            if inp.isdigit():
+                val = int(inp)
+                if not (0 <= val <= 10):
+                    print("Please enter a value between 0 and 10.")
+                    continue
+                brightness = val / 10.0
                 if val == 0:
-                    # turn off if supported
                     try:
                         tree.off()
                     except Exception:
                         tree.color = (0, 0, 0)
                 else:
-                    # ensure the tree shows white at the requested brightness
                     tree.brightness = brightness
                     tree.color = (1, 1, 1)
-
                 print(f"Set brightness to {val} -> {brightness:.2f}")
-
             else:
-                # ignore other keys but print for clarity
-                print(f"Unhandled key: {repr(ch)}")
-
+                print(f"Invalid input: {inp}")
     except KeyboardInterrupt:
         print("Interrupted — exiting.")
     finally:
